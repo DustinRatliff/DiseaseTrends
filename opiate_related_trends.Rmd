@@ -1,0 +1,166 @@
+---
+title: "2017 Social Determinants of Health Addendum"
+author: "Prepared by the Warren County Health District"
+date: "September 1, 2017"
+output:
+   word_document:
+    fig_height: 4.5
+    fig_width: 6
+    reference_docx: template/wchd-word-template.docx
+bibliography: template/bibliography.bib
+link-citations: true
+csl: template/american-journal-of-public-health.csl
+graphics: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE, cache = TRUE}
+
+# Load Packages
+
+#General Packages
+library(tidyverse)
+library(haven)
+library(knitr)
+library(SAScii)
+library(readxl)
+
+#Visualization Packages
+
+library(Cairo)
+library(hrbrthemes)
+library(ggExtra)
+library(ggrepel)
+library(ggthemes)
+library(gridExtra)
+library(sf)
+library(viridis)
+
+#Table Packages
+library(flexdashboard)
+library(flextable)
+library(officer)
+
+#Survey data packages
+library(srvyr)
+
+#Census Packages
+library(tidycensus)
+
+```
+
+```{r import, echo = FALSE, cache = TRUE}
+year <- c(2017,
+          2016,
+          2015,
+          2014,
+          2013,
+          2012,
+          2011,
+          2010,
+          2009,
+          2008,
+          2007,
+          2006,
+          2005)
+
+population <- c(228882,
+                227063,
+                224469,
+                221659,
+                219169,
+                217241,
+                214910,
+                213192,
+                210712,
+                207353,
+                204390,
+                201871,
+                190403)
+
+year_population <- as.tibble(list(year = year, population = population))
+
+rm(year, population)
+
+diseases <- read_csv("ReportableDiseases.csv")
+
+diseases <- diseases %>%
+        gather(-ReportableCondition,key = year, value = count)  %>%
+        mutate(year = as.integer(year))
+
+diseases_opiate <- diseases %>%
+        filter(ReportableCondition %in%
+                       c("Hepatitis A",
+                         "Hepatitis B (including delta) - acute",
+                         "Hepatitis B (including delta) - chronic",
+                         "Hepatitis C - acute",
+                         "Hepatitis C - chronic",
+                         "Chlamydia infection",
+                         "Gonococcal infection",
+                         "Human Immunodeficiency Virus (Living With)",
+                         "Human Immunodeficeincy Virus",
+                         "Syphilis - stage Unknown"
+                         ))
+
+diseases_opiate <- left_join(diseases_opiate, 
+                             year_population)
+
+diseases_opiate <- diseases_opiate %>%
+        mutate(rate = count/population*100000) %>%
+        mutate(rate = round(rate, digits=1)) %>%
+        filter(year > 2005)
+
+
+disease_opiate_graph_count <- ggplot(diseases_opiate,
+         aes(x = as.character(year),
+             y = count,
+             group = ReportableCondition,
+             color = ReportableCondition)) +
+  geom_line() +
+  stat_smooth(method = "lm", 
+              geom='line', 
+              alpha=0.5, 
+              colour = "gray", 
+              se=TRUE) +
+        labs(title = 
+                "Count of Infectious Diseases Related to Opioid Crisis",
+             subtitle = "Warren County, OH", 
+             y = "Count"
+      ) +
+        ylim(0,NA) +
+        theme_minimal() +
+        theme(
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          panel.background = element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank())
+
+disease_opiate_graph_rate <- ggplot(diseases_opiate,
+         aes(x = as.character(year),
+             y = rate,
+             group = ReportableCondition,
+             color = ReportableCondition)) +
+  geom_line() +
+  stat_smooth(method = "lm", 
+              geom='line', 
+              alpha=0.5, 
+              colour = "gray", 
+              se=TRUE) +
+        labs(title = 
+                "Rate of Infectious Diseases Related to Opioid Crisi per 100,000 Population",
+             subtitle = "Warren County, OH", 
+             y = "Rate per 100,000"
+      ) +
+        ylim(0,NA) +
+        theme_minimal() +
+        theme(
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          panel.background = element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank())
+
+
+```
