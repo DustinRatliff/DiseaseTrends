@@ -149,7 +149,11 @@ disease_opiate_graph_rate <- ggplot(diseases_opiate,
               colour = "gray", 
               se=TRUE) +
         labs(title = 
+
                 "Rate of Infectious Diseases Related to Opioid Crisis per 100,000 Population",
+
+                "Rate of Infectious Diseases Related to Opioid Crisi per 100,000 Population",
+
              subtitle = "Warren County, OH", 
              y = "Rate per 100,000"
       ) +
@@ -161,6 +165,7 @@ disease_opiate_graph_rate <- ggplot(diseases_opiate,
           axis.title.x = element_blank(),
           axis.ticks.x = element_blank(),
           axis.ticks.y = element_blank())
+
 
 ggsave(
   plot = disease_opiate_graph_count,
